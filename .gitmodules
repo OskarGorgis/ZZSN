@@ -1,0 +1,3 @@
+[submodule "stockformer"]
+	path = stockformer
+	url = https://github.com/Eric991005/Multitask-Stockformer
