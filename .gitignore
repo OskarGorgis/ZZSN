@@ -1,9 +1,8 @@
-data/raw/
-
-data/
+data/stockformer/*
+data/finrl/*
 
 .venv/
 
 *.pyc
+*.zip
 __pycache__/
-models/stockformer/
