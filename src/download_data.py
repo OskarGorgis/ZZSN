@@ -60,9 +60,9 @@ DATASETS = {
 }
 
 # ── Parametry rolling window (z oryginalnej pracy) ─────────
-TRAIN_DAYS = 200 #486
-VAL_DAYS   = 40 #81
-TEST_DAYS  = 40 #81
+TRAIN_DAYS = 486
+VAL_DAYS   = 81
+TEST_DAYS  = 81
 WINDOW     = TRAIN_DAYS + VAL_DAYS + TEST_DAYS  # 648 dni
 
 # ── Alpha360: 6 kategorii × 60 czynników ──────────────────
