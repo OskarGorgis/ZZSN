@@ -1,6 +1,5 @@
-data/raw/
-
-data/
+data/stockformer/*
+data/finrl/*
 
 .venv/
 
