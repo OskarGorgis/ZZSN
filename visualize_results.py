@@ -78,6 +78,7 @@ def main() -> None:
 
     if all_portfolio:
         plots.plot_portfolio_summary(all_portfolio, RESULTS_ROOT)
+        plots.plot_portfolio_wealth(all_portfolio, RESULTS_ROOT)
 
     print(f"\nDone.  Results saved under:  data/results/")
     print("  metrics_overview.png      — main dataset comparison")
