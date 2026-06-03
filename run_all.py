@@ -22,6 +22,10 @@ DATASETS = {
     "csi300":             {"start": "2021-01-01", "end": "2026-01-31"},
 }
 
+# Okres, na którym model jest TESTOWANY (trening zawsze wcześniejszy)
+TEST_START = "2023-01-01"
+TEST_END   = "2025-12-31"
+
 
 def run(cmd, desc):
     print(f"\n{'='*60}")
@@ -37,10 +41,13 @@ def run(cmd, desc):
 def download(dataset, dates):
     run(
         [sys.executable, "data/stockformer/download_data.py",
-         "--dataset", dataset,
-         "--start",   dates["start"],
-         "--end",     dates["end"]],
-        f"Generowanie danych: {dataset} ({dates['start']} → {dates['end']})",
+         "--dataset",    dataset,
+         "--start",      dates["start"],
+         "--end",        dates["end"],
+         "--test_start", TEST_START,
+         "--test_end",   TEST_END],
+        f"Generowanie danych: {dataset} ({dates['start']} → {dates['end']})"
+        f"  test: {TEST_START} → {TEST_END}",
     )
 
 

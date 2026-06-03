@@ -1,6 +1,7 @@
 data/stockformer/*
 data/finrl/*
-
+data/processed/*
+data/raw/*
 .venv/
 
 *.pyc

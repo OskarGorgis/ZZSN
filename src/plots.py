@@ -9,13 +9,16 @@ Design principles:
 from __future__ import annotations
 
 from pathlib import Path
+from datetime import datetime
 
 import numpy as np
+import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.lines import Line2D
+import matplotlib.dates as mdates
 
 ROOT = Path(__file__).parent.parent
 
@@ -297,6 +300,122 @@ def plot_portfolio_summary(all_portfolio: dict, out_dir: Path) -> None:
 # ═══════════════════════════════════════════════════════════════════════════════
 # ── Cross-eval plots ───────────────────────────────────────────────────────────
 # ═══════════════════════════════════════════════════════════════════════════════
+
+def _test_dates_from_window(window_label: str, test_days: int = 40) -> pd.DatetimeIndex:
+    """Return business-day dates for the test period of a rolling window.
+
+    The window label is 'START_END' (e.g. '2021-01-05_2022-02-11').
+    The test period occupies the last *test_days* trading days of the window.
+    """
+    end_str = window_label.split("_")[1]   # "2022-02-11"
+    end_dt  = datetime.strptime(end_str, "%Y-%m-%d")
+    return pd.bdate_range(end=end_dt, periods=test_days)
+
+
+def plot_portfolio_wealth(all_portfolio: dict, out_dir: Path,
+                          test_days: int = 40) -> None:
+    """
+    Equity-curve charts: portfolio WEALTH over calendar time.
+
+    Each window's test period is placed on real calendar dates using the
+    window end date. Lines go from earliest (purple) to latest (yellow).
+    Generates two separate files per dataset:
+      portfolio_wealth_regression.png
+      portfolio_wealth_classification.png
+    """
+    datasets = [ds for ds in all_portfolio if all_portfolio[ds]]
+    if not datasets:
+        return
+
+    PORT_PANELS = [
+        ("regression",
+         "Regression-based  (long top 20% / short bottom 20% by predicted return)",
+         "portfolio_wealth_regression.png"),
+        ("classification",
+         "Classification-based  (long predicted ↑ / short predicted ↓)",
+         "portfolio_wealth_classification.png"),
+    ]
+
+    for ds in datasets:
+        port_by_window = all_portfolio[ds]
+        windows = sorted(port_by_window.keys())
+        n = len(windows)
+        if n == 0:
+            continue
+
+        cmap   = plt.cm.plasma
+        colors = cmap(np.linspace(0.1, 0.9, n))
+
+        for port_key, subtitle, fname in PORT_PANELS:
+            valid = [
+                (w, colors[i])
+                for i, w in enumerate(windows)
+                if port_by_window[w].get(port_key) is not None
+            ]
+            if not valid:
+                continue
+
+            fig, ax = plt.subplots(figsize=(13, 6))
+
+            final_wealths = []
+            for window, color in valid:
+                port    = port_by_window[window][port_key]
+                daily_r = port["daily_returns"]
+                n_days  = len(daily_r)
+                dates   = _test_dates_from_window(window, test_days=n_days)
+
+                wealth = np.concatenate([[1.0], np.cumprod(1 + daily_r)])
+                dates_plot = pd.DatetimeIndex(
+                    [dates[0] - pd.offsets.BDay(1)] + list(dates)
+                )
+
+                ax.plot(dates_plot, wealth,
+                        color=color, alpha=0.75, linewidth=1.6, zorder=2)
+                final_wealths.append(wealth[-1])
+
+            # Break-even line
+            ax.axhline(1.0, color="black", linewidth=1.0, linestyle="--",
+                       alpha=0.55, zorder=3, label="Break-even (1.0)")
+
+            # Annotation: mean final wealth
+            mean_final = float(np.mean(final_wealths))
+            wins_above = sum(1 for w in final_wealths if w > 1.0)
+            ax.text(0.02, 0.96,
+                    f"Mean final wealth: {mean_final:.4f}\n"
+                    f"Windows ending above 1.0: {wins_above}/{len(final_wealths)}",
+                    transform=ax.transAxes, fontsize=9, va="top",
+                    bbox=dict(boxstyle="round,pad=0.4",
+                              facecolor="white", alpha=0.85, edgecolor="gray"))
+
+            # Colourbar (outside the axes, right side)
+            sm = plt.cm.ScalarMappable(
+                cmap=cmap, norm=plt.Normalize(vmin=0, vmax=n - 1)
+            )
+            sm.set_array([])
+            cbar = fig.colorbar(sm, ax=ax, pad=0.015, aspect=35, shrink=0.85)
+            cbar.set_label("Time period  (earliest → latest)", fontsize=9)
+            cbar.set_ticks([0, n - 1])
+            cbar.set_ticklabels([windows[0][:7], windows[-1][:7]], fontsize=8)
+
+            ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
+            ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+            plt.setp(ax.get_xticklabels(), rotation=40, ha="right", fontsize=9)
+
+            ax.set_title(
+                f"{ds} — {subtitle}\n"
+                "each curve = one rolling test window placed on its real calendar dates",
+                fontsize=11, fontweight="bold", pad=10,
+            )
+            ax.set_ylabel("Portfolio wealth  (1.0 = initial capital)", fontsize=10)
+            ax.set_xlabel("Date", fontsize=10)
+            ax.legend(fontsize=9, loc="upper left")
+            ax.grid(alpha=0.3, linestyle="--")
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+
+            fig.tight_layout()
+            _save(fig, out_dir / ds / fname)
+
 
 def plot_cross_eval_overview(cross_data: dict, indomain: dict,
                               out_dir: Path,
