@@ -1,0 +1,8 @@
+# remember to install the dependencies for the sockformer first
+-r models/stockformer/requirements.txt
+
+yfinance==1.2.0
+pysqlite3==0.6.0
+PyWavelets==1.6.0
+tensorboard==2.20.0
+
