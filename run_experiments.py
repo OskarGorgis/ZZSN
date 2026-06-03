@@ -37,7 +37,7 @@ def run_window(config_path, stockformer_dir):
 
 
 def main(args):
-    stockformer_dir = os.path.join(os.path.dirname(__file__), "stockformer")
+    stockformer_dir = os.path.join(os.path.dirname(__file__), "models/stockformer")
     configs = find_configs(args.config_dir, args.dataset)
 
     if args.window is not None:
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", default="smoke_test",
                         choices=["smoke_test", "nasdaq100", "wig60", "nasdaq100_extended"])
-    parser.add_argument("--config_dir", default="stockformer/config")
+    parser.add_argument("--config_dir", default="models/stockformer/config")
     parser.add_argument("--window", type=int, default=None,
                         help="Run only this window index (0-based). Omit to run all.")
     parser.add_argument("--continue_on_error", action="store_true",

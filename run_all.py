@@ -35,7 +35,7 @@ def run(cmd, desc):
 
 def download(dataset, dates):
     run(
-        [sys.executable, "src/download_data.py",
+        [sys.executable, "data/stockformer/download_data.py",
          "--dataset", dataset,
          "--start",   dates["start"],
          "--end",     dates["end"]],
