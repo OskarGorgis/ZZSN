@@ -9,6 +9,7 @@ Introduce how to use FinRL to fetch and process data that we need for ML/RL trad
 from __future__ import annotations
 
 import itertools
+import argparse
 
 import pandas as pd
 
@@ -74,9 +75,31 @@ def prepare_stock_data(ticker=config_tickers.NAS_100_TICKER, train_save_path="da
     print(f"Data saved to {train_save_path} and {trade_save_path}")
 
 def main(DATA_DIR="data"):
-    prepare_stock_data(config_tickers.NAS_100_TICKER, train_save_path=f"{DATA_SAVE_DIR}/NASDAQ100_train_data.csv")
-    prepare_stock_data(config_tickers.NAS_100_EXT_TICKER, train_save_path=f"{DATA_SAVE_DIR}/NASDAQ100_EXT_train_data.csv")
-    prepare_stock_data(config_tickers.WIG60_TICKER, train_save_path=f"{DATA_SAVE_DIR}/WIG60_train_data.csv")
+    # config mapping
+    dataset_configs = {
+        "nasdaq100": (config_tickers.NAS_100_TICKER, f"{DATA_SAVE_DIR}/NASDAQ100_train_data.csv"),
+        "nasdaq100_extended": (config_tickers.NAS_100_EXT_TICKER, f"{DATA_SAVE_DIR}/NASDAQ100_EXT_train_data.csv"),
+        "wig60": (config_tickers.WIG60_TICKER, f"{DATA_SAVE_DIR}/WIG60_train_data.csv"),
+        "csi300": (config_tickers.CSI300_TICKER, f"{DATA_SAVE_DIR}/CSI300_train_data.csv")
+    }
 
+    parser = argparse.ArgumentParser(description="Fetch and preprocess stock data for FinRL.")
+    parser.add_index = False
+    parser.add_argument(
+        "--dataset", 
+        type=str, 
+        choices=list(dataset_configs.keys()) + ["all"], 
+        default="all",
+        help="The dataset to download and process (default: all)"
+    )
+    args = parser.parse_args()
+
+
+    if args.dataset == "all":
+        for ticker, save_path in dataset_configs.values():
+            prepare_stock_data(ticker, train_save_path=save_path)
+    else:
+        ticker, save_path = dataset_configs[args.dataset]
+        prepare_stock_data(ticker, train_save_path=save_path)
 if __name__ == "__main__":
     main()

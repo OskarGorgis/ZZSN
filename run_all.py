@@ -15,6 +15,10 @@ import sys
 import os
 
 
+# please put there paths to your instacne of python enviroments executable
+STOCKFORMER_PYTHON_PATH = os.path.join(".venv", "bin", "python")
+FINRL_PYTHON_PATH = os.path.join("models", "FinRL", ".venv", "bin", "python")
+
 DATASETS = {
     "nasdaq100":          {"start": "2021-01-01", "end": "2026-01-31"},
     "wig60":              {"start": "2021-01-01", "end": "2026-01-31"},
@@ -34,9 +38,9 @@ def run(cmd, desc):
         sys.exit(rc)
 
 
-def download(dataset, dates):
+def download_stockformer(dataset, dates):
     run(
-        [sys.executable, "data/stockformer/download_data.py",
+        [STOCKFORMER_PYTHON_PATH, "data/stockformer/download_data.py",
          "--dataset", dataset,
          "--start",   dates["start"],
          "--end",     dates["end"]],
@@ -44,27 +48,49 @@ def download(dataset, dates):
     )
 
 
-def train(dataset):
+def train_stockformer(dataset):
     run(
-        [sys.executable, "run_experiments.py",
+        [STOCKFORMER_PYTHON_PATH, "run_experiments.py",
          "--dataset", dataset,
          "--continue_on_error"],
         f"Training: {dataset}",
     )
 
 
-def main(args):
+def download_finrl(dataset, dates):
+    run(
+        [FINRL_PYTHON_PATH, "models/FinRL/1-data.py",
+         "--dataset", dataset],
+        f"Generating data: {dataset} ({dates['start']} → {dates['end']})",
+    )
+
+
+def train_finrl(dataset):
+    print("=== RUNNING TRAINING ===")
+    run(
+        [FINRL_PYTHON_PATH, "models/FinRL/2-train.py",
+         "--dataset", dataset],
+        f"Training: {dataset}",
+    )
+    print("=== RUNNING BACKTESTING ===")
+    run(
+        [FINRL_PYTHON_PATH, "models/FinRL/3-backtest.py",
+         "--dataset", dataset],
+        f"Training: {dataset}",
+    )
+
+
+def main(args, download_fn=download_stockformer, train_fn=train_stockformer):
     datasets = (
         {args.dataset: DATASETS[args.dataset]}
         if args.dataset
         else DATASETS
     )
-
     for dataset, dates in datasets.items():
         if not args.skip_download:
-            download(dataset, dates)
+            download_fn(dataset, dates)
         if not args.skip_train:
-            train(dataset)
+            train_fn(dataset)
 
     print(f"\n{'='*60}")
     print("  All done!")
@@ -72,7 +98,12 @@ def main(args):
 
 
 if __name__ == "__main__":
+    models = ['stockformer', 'finrl-baseline']
     parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default='stockformer',
+                        choices=models,
+                        required=True,
+                        help="Choose model to run.")
     parser.add_argument("--dataset", default=None,
                         choices=list(DATASETS.keys()),
                         help="Run for a single dataset only.")
@@ -81,4 +112,9 @@ if __name__ == "__main__":
     parser.add_argument("--skip_train", action="store_true",
                         help="Skip training.")
     args = parser.parse_args()
-    main(args)
+    if args.model == models[0]:
+        main(args, download_fn=download_stockformer, train_fn=train_stockformer)
+    elif args.model == models[1]:
+        main(args, download_fn=download_finrl, train_fn=train_finrl)
+
+
