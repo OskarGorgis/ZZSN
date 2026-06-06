@@ -22,7 +22,6 @@ import matplotlib.dates as mdates
 
 ROOT = Path(__file__).parent.parent
 
-# ── Report-ready global style ─────────────────────────────────────────────────
 plt.rcParams.update({
     "font.family":        "DejaVu Sans",
     "font.size":          10,
@@ -40,7 +39,6 @@ plt.rcParams.update({
     "grid.linestyle":     "--",
 })
 
-# ── Palette ───────────────────────────────────────────────────────────────────
 DS_COLORS = {
     "nasdaq100":          "#1565C0",
     "wig60":              "#BF360C",
@@ -60,8 +58,6 @@ METRIC_INFO = {
 }
 WINDOW_CMAP = plt.cm.tab20
 
-
-# ── Shared helpers ────────────────────────────────────────────────────────────
 
 def _save(fig: plt.Figure, path: Path, dpi: int = 200) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -89,10 +85,6 @@ def _agg(values: list) -> tuple[float, float]:
         return float("nan"), 0.0
     return float(np.mean(arr)), float(np.std(arr))
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# ── In-domain (single-model) plots ────────────────────────────────────────────
-# ═══════════════════════════════════════════════════════════════════════════════
 
 def plot_metrics_overview(all_logs: dict, out_dir: Path,
                           model_label: str = "Stockformer") -> None:
@@ -172,9 +164,6 @@ def plot_temporal_progression(all_logs: dict, out_dir: Path) -> None:
                     linewidth=2.0, marker="o", markersize=5,
                     label=DS_SHORT.get(ds, ds), zorder=3)
 
-        # ax.set_xticks(range(len(windows)))
-        # ax.set_xticklabels(x_labels, rotation=45, ha="right", fontsize=7.5)
-
         if key == "cls_acc":
             ax.axhline(0.5, color="gray", linestyle=":", linewidth=1.0,
                        alpha=0.7, zorder=2)
@@ -205,7 +194,6 @@ def plot_training_summary(all_logs: dict, out_dir: Path) -> None:
 
     for ax, (key, title, ylabel) in zip(axes, panels):
         for ds in datasets:
-            # Collect curves per window; pad/trim to common length
             curves = [d.get(key, []) for d in all_logs[ds].values()
                       if d.get(key)]
             if not curves:
@@ -299,10 +287,6 @@ def plot_portfolio_summary(all_portfolio: dict, out_dir: Path) -> None:
     _save(fig, out_dir / "portfolio_summary.png")
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# ── Cross-eval plots ───────────────────────────────────────────────────────────
-# ═══════════════════════════════════════════════════════════════════════════════
-
 def _test_dates_from_window(window_label: str, test_days: int = 40) -> pd.DatetimeIndex:
     """Return business-day dates for the test period of a rolling window.
 
@@ -346,7 +330,6 @@ def plot_portfolio_wealth(all_portfolio: dict, out_dir: Path,
             continue
 
         for port_key, subtitle, fname in PORT_PANELS:
-            # 1. Gather all daily returns paired with their actual calendar dates
             all_dates = []
             all_returns = []
 
@@ -365,7 +348,6 @@ def plot_portfolio_wealth(all_portfolio: dict, out_dir: Path,
             if not all_dates:
                 continue
 
-            # 2. Build a continuous DataFrame and handle overlapping window duplicates smoothly
             df_returns = pd.DataFrame({"date": all_dates, "return": all_returns})
             df_returns["date"] = pd.to_datetime(df_returns["date"])
             
@@ -373,29 +355,22 @@ def plot_portfolio_wealth(all_portfolio: dict, out_dir: Path,
             df_returns = df_returns.groupby("date")["return"].mean().reset_index()
             df_returns = df_returns.sort_values("date").reset_index(drop=True)
 
-            # 3. Calculate true cumulative compounded continuous wealth
-            # Starting point: 1.0 wealth on the day before our first return date
+            # starting wealth of 1.0 anchored one business day before the first return
             initial_date = df_returns["date"].iloc[0] - pd.offsets.BDay(1)
             
             dates_plot = [initial_date] + df_returns["date"].tolist()
             wealth_plot = np.concatenate([[1.0], np.cumprod(1 + df_returns["return"].values)])
 
-            # 4. Generate the Plot
             fig, ax = plt.subplots(figsize=(13, 6))
 
-            # Since it's a single line, we can draw it as one clean curve.
-            # You can color it using your theme or apply a gradient if desired!
             ax.plot(dates_plot, wealth_plot,
                     color="#512DA8", alpha=0.9, linewidth=2.0, zorder=2)
             
-            # Fill subtle shade under the equity line
             ax.fill_between(dates_plot, wealth_plot, 1.0, color="#512DA8", alpha=0.08, zorder=1)
 
-            # Break-even baseline
             ax.axhline(1.0, color="black", linewidth=1.0, linestyle="--",
                        alpha=0.55, zorder=3)
 
-            # Annotation box: final total portfolio wealth achieved at the end of the timeline
             final_total_wealth = wealth_plot[-1]
             total_return_pct = (final_total_wealth - 1.0) * 100
             ax.text(0.02, 0.95,
@@ -405,7 +380,6 @@ def plot_portfolio_wealth(all_portfolio: dict, out_dir: Path,
                     bbox=dict(boxstyle="round,pad=0.5",
                               facecolor="white", alpha=0.9, edgecolor="gray"))
 
-            # Formatting Dates and Axis Layout
             ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
             ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
             plt.setp(ax.get_xticklabels(), rotation=40, ha="right", fontsize=9)
@@ -424,11 +398,10 @@ def plot_portfolio_wealth(all_portfolio: dict, out_dir: Path,
 
             fig.tight_layout()
             
-            # Create target folder structures dynamically if missing
             ds_dir = out_dir / ds
             ds_dir.mkdir(parents=True, exist_ok=True)
             _save(fig, ds_dir / fname)
-            plt.close(fig)  # Free memory allocation safely
+            plt.close(fig)
 
 
 def plot_cross_eval_overview(cross_data: dict, indomain: dict,
@@ -453,7 +426,6 @@ def plot_cross_eval_overview(cross_data: dict, indomain: dict,
                  "(mean ± std across rolling windows)",
                  fontsize=12, y=1.02)
 
-    # Bar layout: groups = targets, within group = in-domain + cross sources
     n_bars_per_group = 1 + len(sources)    # in-domain + n cross-sources
     width = 0.75 / n_bars_per_group
     group_positions = np.arange(len(targets))
@@ -545,7 +517,6 @@ def plot_cross_eval_temporal(cross_data: dict, indomain: dict,
             ax.plot(xs, vals, color=color, linewidth=1.8,
                     marker="o", markersize=4.5, label=pair_label, zorder=3)
 
-        # In-domain baselines as horizontal dashed lines
         for ds in {t for _, t in pairs}:
             vals_id = [v[key] for v in indomain.get(ds, {}).values()
                        if v and key in v]

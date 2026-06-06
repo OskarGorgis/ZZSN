@@ -22,7 +22,6 @@ from configs.config import DATA_SAVE_DIR
 from finrl.main import check_and_make_directories
 from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
 
-# Ensure target directories exist
 check_and_make_directories([TRAINED_MODEL_DIR, RESULTS_DIR])
 
 
@@ -31,7 +30,6 @@ def build_env(train_data_path=f"{DATA_SAVE_DIR}/NASDAQ100_train_data.csv"):
     
     train = pd.read_csv(train_data_path)
     
-    # Safely handle the index assignment
     if len(train.columns) > 0:
         train = train.set_index(train.columns[0])
     train.index.names = [""]
@@ -61,7 +59,6 @@ def build_env(train_data_path=f"{DATA_SAVE_DIR}/NASDAQ100_train_data.csv"):
     return env_train
 
 
-# --- SAC ---
 def train_sac_agent(env_train, model_name="agent_sac"):
     print(f"=== Starting SAC Training for {model_name} ===")
     agent = DRLAgent(env=env_train)
@@ -87,8 +84,6 @@ def train_sac_agent(env_train, model_name="agent_sac"):
 
 
 def run_training():
-    # Setup argument parser matching the data script
-    # Dictionary mapping choice names to their file paths and model naming targets
     dataset_configs = {
         "nasdaq100": (f"{DATA_SAVE_DIR}/NASDAQ100_train_data.csv", "agent_sac_nasdaq100"),
         "nasdaq100_extended": (f"{DATA_SAVE_DIR}/NASDAQ100_EXT_train_data.csv", "agent_sac_nasdaq100_ext"),
@@ -108,12 +103,10 @@ def run_training():
 
 
     if args.dataset == "all":
-        # Process all configurations sequentially
         for data_path, model_name in dataset_configs.values():
             env = build_env(train_data_path=data_path)
             train_sac_agent(env, model_name=model_name)
     else:
-        # Process only the selected dataset environment
         data_path, model_name = dataset_configs[args.dataset]
         print(data_path)
         env = build_env(train_data_path=data_path)

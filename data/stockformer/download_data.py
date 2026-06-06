@@ -20,8 +20,6 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings('ignore')
 
-# ── Ticker lists ─────────────────────────────────────────
-
 NASDAQ100 = [
     "NVDA","AAPL","MSFT","AMZN","GOOGL","GOOG","AVGO","TSLA","META","MU",
     "WMT","AMD","ASML","INTC","CSCO","COST","LRCX","PLTR","NFLX",
@@ -95,13 +93,11 @@ DATASETS = {
     "smoke_test":         NASDAQ100[:10],
 }
 
-# ── Rolling window params ────────────────────────────────
 TRAIN_DAYS = 200
 VAL_DAYS   = 40
 TEST_DAYS  = 40
 WINDOW     = TRAIN_DAYS + VAL_DAYS + TEST_DAYS
 
-# ── Alpha158: rolling windows ────────────────────────────
 ALPHA_CATEGORIES = ["CLOSE", "OPEN", "HIGH", "LOW", "VWAP", "VOLUME"]
 
 
@@ -147,8 +143,8 @@ def compute_trend(returns_df):
 
 def build_alpha360(df, tickers):
     """
-    Buduje 360 czynników Alpha360.
-    Każdy czynnik: Ref(X, t) / close_t  dla t in 0..59
+    Build 360 Alpha360 factors.
+    Each factor: Ref(X, t) / close_t for t in 0..59.
     Returns dict: {"CLOSE0": DataFrame(T x N), ...}
     """
     factors = {}
@@ -162,7 +158,7 @@ def build_alpha360(df, tickers):
                 shifted = base.shift(lag)
                 factors[key] = shifted / (base + 1e-12)
         elif cat == "VWAP":
-            # VWAP przybliżamy jako (High+Low+Close)/3 jeśli brak osobnego
+            # VWAP approximated as (High+Low+Close)/3 when no separate VWAP column is available
             try:
                 base = df.xs("VWAP", axis=1, level=1)[tickers]
             except KeyError:
@@ -180,7 +176,6 @@ def build_alpha360(df, tickers):
                 key = f"{cat}{lag}"
                 factors[key] = base.shift(lag) / close
 
-    # Zastąp inf i nan zerem
     for k in factors:
         factors[k] = factors[k].replace([np.inf, -np.inf], np.nan).fillna(0)
 
@@ -362,12 +357,10 @@ def main(args):
     factors     = {k: v.loc[dates] for k, v in factors.items()}
     print(f"  Generated {len(factors)} factors")
 
-    # 4. Correlation and embedding
     print("  Computing correlation matrix...")
     corr = compute_corr_matrix(returns)
     emb  = simple_graph_embedding(corr, dim=128)
 
-    # 5. Rolling windows
     n_windows = 1 if args.smoke_test else 14
     windows = build_rolling_windows(dates, n_windows)
     print(f"\n  Generating {len(windows)} subdataset(s)...\n")

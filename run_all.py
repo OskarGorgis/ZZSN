@@ -15,7 +15,7 @@ import sys
 import os
 
 
-# please put there paths to your instacne of python enviroments executable
+# set paths to your Python environment executables
 STOCKFORMER_PYTHON_PATH = os.path.join(".venv", "bin", "python")
 FINRL_PYTHON_PATH = os.path.join("models", "FinRL", ".venv", "bin", "python")
 
