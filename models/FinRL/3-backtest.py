@@ -10,7 +10,7 @@ Mean Variance Optimization and DJIA index.
 
 from __future__ import annotations
 
-import argparse  # Added for argument handling
+import argparse
 import os
 import matplotlib
 
@@ -145,7 +145,6 @@ def save_plot(result, path):
     plt.xlabel("Date")
     plt.ylabel("Portfolio Value ($)")
     
-    # Ensure target output folder exists before saving plot
     os.makedirs(os.path.dirname(path), exist_ok=True)
     plt.savefig(path, dpi=150, bbox_inches="tight")
     plt.close()
@@ -155,17 +154,14 @@ def save_plot(result, path):
 def execute_pipeline(train_file, trade_file, agent_model, plot_name):
     print(f"\n=== Running Backtest Pipeline for {plot_name.upper()} ===")
     
-    # 1. Load Data
     train_data, trade_data = load_data(
         train_path=f"{DATA_SAVE_DIR}/{train_file}", 
         trade_path=f"{DATA_SAVE_DIR}/{trade_file}"
     )
 
-    # 2. Backtest Agent
     df_account_value_sac, _ = backtest_agent(agent_model, trade_data)
     df_result_sac = df_account_value_sac.set_index(df_account_value_sac.columns[0])
 
-    # 3. Baselines (MVO & DJI)
     MVO_result = backtest_mvo(train_data, trade_data)
     dji = backtest_dji()
     
@@ -181,7 +177,6 @@ def execute_pipeline(train_file, trade_file, agent_model, plot_name):
     print("\n=== Backtest Results Preview ===")
     print(result.head())
 
-    # 5. Output Visualization
     save_plot(result, f"{RESULTS_DIR}/{plot_name}_backtest_result.png")
 
 

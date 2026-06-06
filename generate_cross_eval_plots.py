@@ -88,18 +88,14 @@ def main() -> None:
     print("\nGenerating plots...")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # ── Main comparison: grouped by target dataset ────────────────────────────
     plots.plot_cross_eval_overview(cross_data, indomain, OUT_DIR,
                                    args.model_label)
 
-    # ── Transfer gap (Δ = cross − in-domain) ─────────────────────────────────
     plots.plot_transfer_delta(cross_data, indomain, OUT_DIR)
 
-    # ── Temporal: how transfer quality evolves across windows ─────────────────
     plots.plot_cross_eval_temporal(cross_data, indomain, OUT_DIR)
 
-    # ── Heatmap matrix ────────────────────────────────────────────────────────
-    # Build all_rows including in-domain diagonal
+    # build all_rows including in-domain diagonal for the heatmap
     all_rows = []
     for ds, wins in indomain.items():
         for w, m in wins.items():

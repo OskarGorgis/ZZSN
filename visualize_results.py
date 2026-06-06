@@ -49,29 +49,22 @@ def main() -> None:
     datasets = [args.dataset] if args.dataset else DATASETS
     RESULTS_ROOT.mkdir(parents=True, exist_ok=True)
 
-    # ── Load all logs ─────────────────────────────────────────────────────────
     print("Loading training logs...")
     all_logs = load_all_datasets(datasets)
     for ds, logs in all_logs.items():
         n = sum(1 for d in logs.values() if d.get("test"))
         print(f"  {ds}: {len(logs)} windows, {n} with test results")
-    # print(list(all_logs.items())[0])
-    # return
     _print_summary(all_logs)
 
-    # ── Main: dataset-level comparison ───────────────────────────────────────
     print("\nGenerating main comparison figures...")
     plots.plot_metrics_overview(all_logs, RESULTS_ROOT, args.model_label)
     plots.plot_temporal_progression(all_logs, RESULTS_ROOT)
     plots.plot_training_summary(all_logs, RESULTS_ROOT)
 
-    # ── Portfolio: aggregate across windows ───────────────────────────────────
     print("\nLoading prediction CSVs for portfolio analysis...")
     all_portfolio = {}
     for ds, logs in all_logs.items():
         windows   = sorted(logs.keys())
-        # print(ds)
-        # print(windows)
         port_data = compute_all_portfolios(ds, windows)
         if port_data:
             print(f"  {ds}: {len(port_data)} windows with prediction CSVs")

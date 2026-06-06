@@ -34,8 +34,6 @@ from models.stockformer.Stockformermodel.Multitask_Stockformer_models import Sto
 
 from src.log_parser import load_dataset as load_logs
 
-# ── Constants ─────────────────────────────────────────────────────────────────
-
 DATASETS     = ["nasdaq100", "wig60", "nasdaq100_extended"]
 CONFIG_ROOT  = ROOT / "stockformer" / "config"
 RESULTS_ROOT = ROOT / "data" / "results" / "cross_eval"
@@ -43,8 +41,6 @@ RESULTS_ROOT = ROOT / "data" / "results" / "cross_eval"
 OUTFEA_CLASS   = 2
 OUTFEA_REGRESS = 1
 
-
-# ── Config / data helpers ─────────────────────────────────────────────────────
 
 def _load_config(conf_path: Path) -> SimpleNamespace:
     cfg = configparser.ConfigParser()
@@ -81,8 +77,6 @@ def _list_windows(dataset: str) -> list:
         for f in conf_dir.glob("window_*.conf")
     )
 
-
-# ── Model helpers ─────────────────────────────────────────────────────────────
 
 def _build_model(args: SimpleNamespace, infeature: int,
                  device: torch.device) -> Stockformer:
@@ -139,8 +133,6 @@ def _evaluate(model, test_ds, adjgat, batch_size: int,
     }
 
 
-# ── Cross-eval logic ──────────────────────────────────────────────────────────
-
 def run_cross_eval(source_ds: str, target_ds: str,
                    device: torch.device) -> list:
     """Match windows by index, evaluate source model on target test set."""
@@ -187,8 +179,6 @@ def run_cross_eval(source_ds: str, target_ds: str,
     return rows
 
 
-# ── CSV helper ────────────────────────────────────────────────────────────────
-
 def _save_csv(rows: list, path: Path) -> None:
     if not rows:
         return
@@ -202,8 +192,6 @@ def _save_csv(rows: list, path: Path) -> None:
     except ValueError:
         print(f"  Saved: {path}")
 
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -252,7 +240,6 @@ def main() -> None:
                     **d["test"],
                 })
 
-    # Cross-evaluations
     for source_ds, target_ds in pairs:
         print(f"\n{'='*60}")
         print(f"  {source_ds}  →  {target_ds}")
@@ -267,7 +254,6 @@ def main() -> None:
         slug = f"{source_ds}_to_{target_ds}"
         _save_csv(rows, RESULTS_ROOT / f"{slug}.csv")
 
-        # Console summary with delta
         print(f"\n  Summary ({source_ds} → {target_ds}):")
         for key, label in [("cls_acc", "Cls Acc"), ("reg_mae", "Reg MAE"), ("reg_rmse", "Reg RMSE")]:
             cross = [r[key] for r in rows]

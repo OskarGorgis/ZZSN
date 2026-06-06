@@ -13,8 +13,6 @@ DATA_ROOT = ROOT / "data" / "stockformer" / "processed"
 _CLS_PAIR = re.compile(r"\[\s*([-+\d.eE]+)\s+([-+\d.eE]+)\s*\]")
 
 
-# ── CSV parsing ───────────────────────────────────────────────────────────────
-
 def parse_reg_csv(path: Path) -> np.ndarray:
     """Parse regression prediction CSV → (T, N) float array."""
     rows = []
@@ -49,8 +47,6 @@ def parse_cls_csv(path: Path) -> np.ndarray:
     return arr
 
 
-# ── Stats helpers ─────────────────────────────────────────────────────────────
-
 def _stats(daily_r: np.ndarray) -> dict:
     mean_r = float(np.mean(daily_r))
     std_r  = float(np.std(daily_r)) + 1e-10
@@ -67,8 +63,6 @@ def _stats(daily_r: np.ndarray) -> dict:
         "ann_vol":      float(std_r * np.sqrt(252)),
     }
 
-
-# ── Portfolio strategies ──────────────────────────────────────────────────────
 
 def regression_portfolio(pred_ret: np.ndarray, actual_ret: np.ndarray,
                          quantile: float = 0.2) -> dict:
@@ -125,7 +119,6 @@ def classification_portfolio(pred_logits: np.ndarray,
         short_r = float(np.mean(actual_ret[t, short_mask])) if short_mask.any() else 0.0
         daily_r[t] = long_r - short_r
 
-    # Classification accuracy vs actual direction
     actual_dir = (actual_ret > 0).astype(int)
     cls_acc = float(np.mean(pred_labels == actual_dir))
 
@@ -137,8 +130,6 @@ def classification_portfolio(pred_logits: np.ndarray,
         **_stats(daily_r),
     }
 
-
-# ── Data loading ──────────────────────────────────────────────────────────────
 
 def load_window_outputs(dataset: str, window: str):
     """Load CSV outputs for one window.
