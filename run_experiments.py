@@ -73,7 +73,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", default="smoke_test",
-                        choices=["smoke_test", "nasdaq100", "wig60", "nasdaq100_extended"])
+                        choices=["smoke_test", "nasdaq100", "wig60", "nasdaq100_extended", "csi300"])
     parser.add_argument("--config_dir", default="models/stockformer/config")
     parser.add_argument("--window", type=int, default=None,
                         help="Run only this window index (0-based). Omit to run all.")

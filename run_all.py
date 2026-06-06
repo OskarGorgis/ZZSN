@@ -1,12 +1,12 @@
 """
 run_all.py
-Generuje dane i trenuje modele dla wszystkich datasetów.
+Generates data and trains models for all datasets.
 
-Użycie:
-    python run_all.py                        # generuj + trenuj wszystko
-    python run_all.py --skip_download        # tylko trenowanie (dane już są)
-    python run_all.py --skip_train           # tylko generowanie danych
-    python run_all.py --dataset nasdaq100    # tylko jeden dataset
+Usage:
+    python run_all.py                        # download + train everything
+    python run_all.py --skip_download        # training only (data exists)
+    python run_all.py --skip_train           # data generation only
+    python run_all.py --dataset nasdaq100    # single dataset only
 """
 
 import argparse
@@ -22,10 +22,6 @@ DATASETS = {
     "csi300":             {"start": "2021-01-01", "end": "2026-01-31"},
 }
 
-# Okres, na którym model jest TESTOWANY (trening zawsze wcześniejszy)
-TEST_START = "2023-01-01"
-TEST_END   = "2025-12-31"
-
 
 def run(cmd, desc):
     print(f"\n{'='*60}")
@@ -34,20 +30,17 @@ def run(cmd, desc):
     print(f"{'='*60}")
     rc = subprocess.run(cmd).returncode
     if rc != 0:
-        print(f"\n  BLAD (exit {rc}): {desc}")
+        print(f"\n  ERROR (exit {rc}): {desc}")
         sys.exit(rc)
 
 
 def download(dataset, dates):
     run(
         [sys.executable, "data/stockformer/download_data.py",
-         "--dataset",    dataset,
-         "--start",      dates["start"],
-         "--end",        dates["end"],
-         "--test_start", TEST_START,
-         "--test_end",   TEST_END],
-        f"Generowanie danych: {dataset} ({dates['start']} → {dates['end']})"
-        f"  test: {TEST_START} → {TEST_END}",
+         "--dataset", dataset,
+         "--start",   dates["start"],
+         "--end",     dates["end"]],
+        f"Generating data: {dataset} ({dates['start']} → {dates['end']})",
     )
 
 
@@ -56,7 +49,7 @@ def train(dataset):
         [sys.executable, "run_experiments.py",
          "--dataset", dataset,
          "--continue_on_error"],
-        f"Trenowanie: {dataset}",
+        f"Training: {dataset}",
     )
 
 
@@ -74,7 +67,7 @@ def main(args):
             train(dataset)
 
     print(f"\n{'='*60}")
-    print("  Wszystko gotowe!")
+    print("  All done!")
     print(f"{'='*60}")
 
 
@@ -82,10 +75,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", default=None,
                         choices=list(DATASETS.keys()),
-                        help="Uruchom tylko dla jednego datasetu.")
+                        help="Run for a single dataset only.")
     parser.add_argument("--skip_download", action="store_true",
-                        help="Pomiń generowanie danych.")
+                        help="Skip data generation.")
     parser.add_argument("--skip_train", action="store_true",
-                        help="Pomiń trenowanie.")
+                        help="Skip training.")
     args = parser.parse_args()
     main(args)

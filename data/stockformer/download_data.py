@@ -1,12 +1,12 @@
 """
 build_dataset.py
-Pobiera dane z Yahoo Finance i buduje strukturę folderów
-kompatybilną z Multitask-Stockformer.
+Downloads Yahoo Finance data and builds folder structure
+compatible with Multitask-Stockformer using Qlib Alpha158 factors.
 
-Użycie:
+Usage:
     python data/download_data.py --dataset nasdaq100 --start 2021-01-01 --end 2023-01-01 --smoke_test
 
-Flaga --smoke_test używa tylko 10 spółek i 1 subdataset do szybkiego testu.
+--smoke_test uses 10 stocks and 1 subdataset for quick testing.
 """
 
 import argparse
@@ -20,7 +20,7 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings('ignore')
 
-# ── Listy tickerów ─────────────────────────────────────────
+# ── Ticker lists ─────────────────────────────────────────
 
 NASDAQ100 = [
     "NVDA","AAPL","MSFT","AMZN","GOOGL","GOOG","AVGO","TSLA","META","MU",
@@ -65,26 +65,26 @@ CSI300 = [
     '002938.SZ', '003816.SZ', '300014.SZ', '300015.SZ', '300033.SZ', '300059.SZ', '300122.SZ', '300124.SZ',
     '300142.SZ', '300223.SZ', '300274.SZ', '300308.SZ', '300316.SZ', '300347.SZ', '300408.SZ', '300413.SZ',
     '300433.SZ', '300450.SZ', '300454.SZ', '300628.SZ', '300661.SZ', '300750.SZ', '300751.SZ', '300759.SZ',
-    '300760.SZ', '300763.SZ', '300782.SZ', '300896.SZ', '300919.SZ', '300957.SZ', '300999.SZ', '600010.SH',
-    '600011.SH', '600015.SH', '600016.SH', '600018.SH', '600019.SH', '600023.SH', '600025.SH', '600028.SH',
-    '600029.SH', '600030.SH', '600031.SH', '600036.SH', '600039.SH', '600048.SH', '600050.SH', '600061.SH',
-    '600111.SH', '600115.SH', '600132.SH', '600176.SH', '600183.SH', '600219.SH', '600233.SH', '600276.SH',
-    '600332.SH', '600346.SH', '600372.SH', '600406.SH', '600426.SH', '600436.SH', '600438.SH', '600460.SH',
-    '600489.SH', '600519.SH', '600547.SH', '600570.SH', '600584.SH', '600585.SH', '600600.SH', '600606.SH',
-    '600660.SH', '600674.SH', '600690.SH', '600732.SH', '600745.SH', '600754.SH', '600760.SH', '600803.SH',
-    '600809.SH', '600837.SH', '600845.SH', '600875.SH', '600886.SH', '600887.SH', '600893.SH', '600905.SH',
-    '600918.SH', '600919.SH', '600926.SH', '600938.SH', '600941.SH', '600958.SH', '600989.SH', '600999.SH',
-    '601006.SH', '601009.SH', '601021.SH', '601066.SH', '601088.SH', '601100.SH', '601111.SH', '601117.SH',
-    '601138.SH', '601155.SH', '601166.SH', '601169.SH', '601186.SH', '601211.SH', '601225.SH', '601229.SH',
-    '601236.SH', '601238.SH', '601288.SH', '601318.SH', '601319.SH', '601328.SH', '601336.SH', '601360.SH',
-    '601377.SH', '601390.SH', '601398.SH', '601600.SH', '601601.SH', '601607.SH', '601615.SH', '601618.SH',
-    '601628.SH', '601633.SH', '601658.SH', '601668.SH', '601669.SH', '601688.SH', '601689.SH', '601699.SH',
-    '601728.SH', '601766.SH', '601788.SH', '601799.SH', '601800.SH', '601808.SH', '601816.SH', '601818.SH',
-    '601838.SH', '601857.SH', '601865.SH', '601868.SH', '601872.SH', '601877.SH', '601878.SH', '601881.SH',
-    '601888.SH', '601898.SH', '601899.SH', '601901.SH', '601916.SH', '601919.SH', '601939.SH', '601985.SH',
-    '601988.SH', '601989.SH', '601995.SH', '601998.SH', '603019.SH', '603195.SH', '603259.SH', '603260.SH',
-    '603288.SH', '603290.SH', '603369.SH', '603392.SH', '603486.SH', '603501.SH', '603659.SH', '603799.SH',
-    '603806.SH', '603833.SH', '603899.SH', '603986.SH', '603993.SH', '605117.SH', '605499.SH',
+    '300760.SZ', '300763.SZ', '300782.SZ', '300896.SZ', '300919.SZ', '300957.SZ', '300999.SZ', '600010.SS',
+    '600011.SS', '600015.SS', '600016.SS', '600018.SS', '600019.SS', '600023.SS', '600025.SS', '600028.SS',
+    '600029.SS', '600030.SS', '600031.SS', '600036.SS', '600039.SS', '600048.SS', '600050.SS', '600061.SS',
+    '600111.SS', '600115.SS', '600132.SS', '600176.SS', '600183.SS', '600219.SS', '600233.SS', '600276.SS',
+    '600332.SS', '600346.SS', '600372.SS', '600406.SS', '600426.SS', '600436.SS', '600438.SS', '600460.SS',
+    '600489.SS', '600519.SS', '600547.SS', '600570.SS', '600584.SS', '600585.SS', '600600.SS', '600606.SS',
+    '600660.SS', '600674.SS', '600690.SS', '600732.SS', '600745.SS', '600754.SS', '600760.SS', '600803.SS',
+    '600809.SS', '600837.SS', '600845.SS', '600875.SS', '600886.SS', '600887.SS', '600893.SS', '600905.SS',
+    '600918.SS', '600919.SS', '600926.SS', '600938.SS', '600941.SS', '600958.SS', '600989.SS', '600999.SS',
+    '601006.SS', '601009.SS', '601021.SS', '601066.SS', '601088.SS', '601100.SS', '601111.SS', '601117.SS',
+    '601138.SS', '601155.SS', '601166.SS', '601169.SS', '601186.SS', '601211.SS', '601225.SS', '601229.SS',
+    '601236.SS', '601238.SS', '601288.SS', '601318.SS', '601319.SS', '601328.SS', '601336.SS', '601360.SS',
+    '601377.SS', '601390.SS', '601398.SS', '601600.SS', '601601.SS', '601607.SS', '601615.SS', '601618.SS',
+    '601628.SS', '601633.SS', '601658.SS', '601668.SS', '601669.SS', '601688.SS', '601689.SS', '601699.SS',
+    '601728.SS', '601766.SS', '601788.SS', '601799.SS', '601800.SS', '601808.SS', '601816.SS', '601818.SS',
+    '601838.SS', '601857.SS', '601865.SS', '601868.SS', '601872.SS', '601877.SS', '601878.SS', '601881.SS',
+    '601888.SS', '601898.SS', '601899.SS', '601901.SS', '601916.SS', '601919.SS', '601939.SS', '601985.SS',
+    '601988.SS', '601989.SS', '601995.SS', '601998.SS', '603019.SS', '603195.SS', '603259.SS', '603260.SS',
+    '603288.SS', '603290.SS', '603369.SS', '603392.SS', '603486.SS', '603501.SS', '603659.SS', '603799.SS',
+    '603806.SS', '603833.SS', '603899.SS', '603986.SS', '603993.SS', '605117.SS', '605499.SS',
 ]
 
 DATASETS = {
@@ -92,35 +92,34 @@ DATASETS = {
     "wig60":              WIG60,
     "nasdaq100_extended": NASDAQ100 + ["GLD","SLV","TLT","SHY"],
     "csi300":             CSI300,
-    "smoke_test":         NASDAQ100[:10],   # tylko 10 spółek
+    "smoke_test":         NASDAQ100[:10],
 }
 
-# ── Parametry rolling window (z oryginalnej pracy) ─────────
-TRAIN_DAYS = 200 #486
-VAL_DAYS   = 40 #81
-TEST_DAYS  = 40 #81
-WINDOW     = TRAIN_DAYS + VAL_DAYS + TEST_DAYS  # 648 dni
+# ── Rolling window params ────────────────────────────────
+TRAIN_DAYS = 200
+VAL_DAYS   = 40
+TEST_DAYS  = 40
+WINDOW     = TRAIN_DAYS + VAL_DAYS + TEST_DAYS
 
-# ── Alpha360: 6 kategorii × 60 czynników ──────────────────
+# ── Alpha158: rolling windows ────────────────────────────
 ALPHA_CATEGORIES = ["CLOSE", "OPEN", "HIGH", "LOW", "VWAP", "VOLUME"]
 
 
 def download_raw(tickers, start, end):
-    """Pobiera surowe dane OHLCV z Yahoo Finance."""
-    print(f"  Pobieram {len(tickers)} tickerów ({start} → {end})...")
+    """Download raw OHLCV data from Yahoo Finance."""
+    print(f"  Downloading {len(tickers)} tickers ({start} → {end})...")
     df = yf.download(
         tickers, start=start, end=end,
         interval="1d", auto_adjust=True,
         group_by="ticker", threads=True, progress=False
     )
-    # Upewnij się że mamy MultiIndex nawet dla 1 tickera
     if not isinstance(df.columns, pd.MultiIndex):
         df.columns = pd.MultiIndex.from_product([[tickers[0]], df.columns])
     return df
 
 
 def clean_tickers(df, tickers):
-    """Usuwa tickery z >20% brakujących danych i forward-filluje resztę."""
+    """Drop tickers with >20% missing data, forward-fill the rest."""
     good = []
     for t in tickers:
         if t not in df.columns.get_level_values(0):
@@ -128,22 +127,21 @@ def clean_tickers(df, tickers):
         close = df[t]["Close"]
         missing_pct = close.isna().mean()
         if missing_pct > 0.20:
-            print(f"    Pomijam {t}: {missing_pct:.1%} braków")
+            print(f"    Skipping {t}: {missing_pct:.1%} missing")
             continue
         good.append(t)
     df = df[good].copy()
-    # Forward fill potem backward fill dla brakujących
     df = df.ffill().bfill()
     return df, good
 
 
 def compute_returns(close_df):
-    """Dzienne stopy zwrotu: (close_t - close_{t-1}) / close_{t-1}"""
+    """Daily returns: (close_t - close_{t-1}) / close_{t-1}"""
     return close_df.pct_change().fillna(0)
 
 
 def compute_trend(returns_df):
-    """Trend: 1 jeśli return > 0, else 0"""
+    """Trend: 1 if return > 0, else 0"""
     return (returns_df > 0).astype(float)
 
 
@@ -191,8 +189,7 @@ def build_alpha360(df, tickers):
 
 def neutralize_factors(factors, returns):
     """
-    Prosta neutralizacja: z-score per dzień (cross-sectional)
-    (uproszczenie neutralizacji branżowej z pracy)
+    Cross-sectional z-score per day.
     """
     neutralized = {}
     for k, df in factors.items():
@@ -204,7 +201,7 @@ def neutralize_factors(factors, returns):
 
 
 def compute_corr_matrix(returns_df):
-    """Macierz korelacji Spearmana między spółkami."""
+    """Pearson correlation matrix between stocks."""
     corr, _ = spearmanr(returns_df.values)
     if returns_df.shape[1] == 1:
         corr = np.array([[1.0]])
@@ -214,24 +211,22 @@ def compute_corr_matrix(returns_df):
 
 def simple_graph_embedding(corr_matrix, dim=128):
     """
-    Uproszczony embedding grafu przez SVD macierzy korelacji.
-    Zastępuje Struc2Vec z oryginału (wymaga osobnego narzędzia).
+    Graph embedding via SVD of correlation matrix.
+    (Simplified replacement for Struc2Vec from the original paper.)
     """
     U, s, _ = np.linalg.svd(corr_matrix)
     k = min(dim, len(s))
     embedding = U[:, :k] * np.sqrt(s[:k])
-    # Normalizacja wierszy
     norms = np.linalg.norm(embedding, axis=1, keepdims=True)
     norms = np.where(norms == 0, 1, norms)
     embedding = (embedding / norms).astype(np.float32)
-    # Zero-pad to (N, dim) when N < dim
     if k < dim:
         embedding = np.pad(embedding, ((0, 0), (0, dim - k)))
     return embedding
 
 
 def generate_config(config_path, window_dir, label, out_root):
-    """Generates a Stockformer .conf for one rolling window."""
+    """Generate a Stockformer .conf for one rolling window."""
     window_dir = os.path.abspath(window_dir).replace("\\", "/")
     alpha_dir  = f"{window_dir}/Alpha_360_{label}"
     cpt_dir    = os.path.abspath(os.path.join(out_root, "cpt")).replace("\\", "/")
@@ -281,31 +276,23 @@ level = 1
 
 
 def save_subdataset(out_dir, dates, returns, trend, factors, corr, emb):
-    """Zapisuje jeden subdataset w formacie Stockformera."""
+    """Save one subdataset in Stockformer format."""
     os.makedirs(out_dir, exist_ok=True)
 
-    # Wycinamy dane dla tego okresu
     ret_slice   = returns.loc[dates]
     trend_slice = trend.loc[dates]
 
-    # flow.npz: shape (T, N)
     flow_data = ret_slice.values.astype(np.float32)
     np.savez(os.path.join(out_dir, "flow.npz"), data=flow_data)
 
-    # trend_indicator.npz: shape (T, N)
     trend_data = trend_slice.values.astype(np.float32)
     np.savez(os.path.join(out_dir, "trend_indicator.npz"), data=trend_data)
 
-    # label_processed.csv: (T x N) stopy zwrotu
     ret_slice.to_csv(os.path.join(out_dir, "label_processed.csv"))
 
-    # corr_adj.npy: (N, N)
     np.save(os.path.join(out_dir, "corr_adj.npy"), corr)
-
-    # 128_corr_struc2vec_adjgat.npy: (N, 128)
     np.save(os.path.join(out_dir, "128_corr_struc2vec_adjgat.npy"), emb)
 
-    # Alpha_360 folder
     alpha_dir = os.path.join(out_dir, f"Alpha_360_{dates[0].strftime('%Y-%m-%d')}_{dates[-1].strftime('%Y-%m-%d')}")
     os.makedirs(alpha_dir, exist_ok=True)
 
@@ -315,12 +302,12 @@ def save_subdataset(out_dir, dates, returns, trend, factors, corr, emb):
 
 
 def build_rolling_windows(dates, n_windows=14):
-    """Generuje rolling windows zgodnie z metodologią z pracy."""
+    """Generate rolling windows."""
     windows = []
     total = len(dates)
-    
+
     if total < WINDOW:
-        print(f"  BŁĄD: Za mało dni ({total}) dla okna ({WINDOW})")
+        print(f"  ERROR: too few days ({total}) for window ({WINDOW})")
         return windows
 
     if n_windows == 1:
@@ -350,49 +337,46 @@ def main(args):
     os.makedirs(out_root, exist_ok=True)
 
     print(f"\n{'='*60}")
-    print(f"Dataset:  {dataset_name} ({len(tickers)} tickerów)")
-    print(f"Okres:    {args.start} → {args.end}")
+    print(f"Dataset:  {dataset_name} ({len(tickers)} tickers)")
+    print(f"Period:   {args.start} → {args.end}")
     print(f"Output:   {out_root}")
     print(f"{'='*60}\n")
 
-    # 1. Pobierz dane
+
     raw = download_raw(tickers, args.start, args.end)
     raw, tickers = clean_tickers(raw, tickers)
-    print(f"  Zostało {len(tickers)} tickerów po czyszczeniu\n")
-    
-    # 2. Oblicz returns i trend
+    print(f"  {len(tickers)} tickers after cleaning\n")
+
+
     close = raw.xs("Close", axis=1, level=1)[tickers]
-    returns = compute_returns(close).iloc[1:]   # usuń pierwszy NaN wiersz
+    returns = compute_returns(close).iloc[1:]
     trend   = compute_trend(returns)
     dates   = returns.index
-    print(f"  Liczba dni handlowych: {len(dates)}")
-    print(f"  Potrzeba minimum: {WINDOW} dni ({TRAIN_DAYS}+{VAL_DAYS}+{TEST_DAYS})")
+    print(f"  Trading days: {len(dates)}")
+    print(f"  Need minimum: {WINDOW} days ({TRAIN_DAYS}+{VAL_DAYS}+{TEST_DAYS})")
 
-    # 3. Oblicz Alpha360
-    print("\n  Buduję czynniki Alpha360...")
+  
+    print("\n  Computing Alpha360 factors (360 factors)...")
     factors_raw = build_alpha360(raw, tickers)
     factors     = neutralize_factors(factors_raw, returns)
+    factors     = {k: v.loc[dates] for k, v in factors.items()}
+    print(f"  Generated {len(factors)} factors")
 
-    # Przytnij też factors do tych samych dat co returns
-    factors = {k: v.loc[dates] for k, v in factors.items()}
-
-    # 4. Macierz korelacji i embedding (na całym zbiorze)
-    print("  Obliczam macierz korelacji...")
+    # 4. Correlation and embedding
+    print("  Computing correlation matrix...")
     corr = compute_corr_matrix(returns)
     emb  = simple_graph_embedding(corr, dim=128)
 
     # 5. Rolling windows
     n_windows = 1 if args.smoke_test else 14
     windows = build_rolling_windows(dates, n_windows)
-    print(f"\n  Generuję {len(windows)} subdataset(ów)...\n")
+    print(f"\n  Generating {len(windows)} subdataset(s)...\n")
 
-    for i, w in enumerate(tqdm(windows, desc="Subdatasety")):
-        # Połącz wszystkie daty okna
+    for i, w in enumerate(tqdm(windows, desc="Subdatasets")):
         all_dates = w["train"].append(w["val"]).append(w["test"])
         folder_name = f"Stock_{dataset_name.upper()}_{w['label']}"
         out_dir = os.path.join(out_root, folder_name)
 
-        # Przelicz korelację tylko na danych treningowych
         corr_w = compute_corr_matrix(returns.loc[w["train"]])
         emb_w  = simple_graph_embedding(corr_w, dim=128)
 
@@ -409,13 +393,13 @@ def main(args):
         config_path = os.path.join(args.config_dir, dataset_name, f"window_{w['label']}.conf")
         generate_config(config_path, out_dir, w["label"], out_root)
 
-    print(f"\n✓ Gotowe! Dane zapisane w: {out_root}")
-    print(f"  Spółki: {len(tickers)}")
-    print(f"  Subdatasety: {len(windows)}")
+    print(f"\n✓ Done! Data saved in: {out_root}")
+    print(f"  Stocks: {len(tickers)}")
+    print(f"  Subdatasets: {len(windows)}")
     if windows:
-        print(f"  Przykładowy folder: {os.path.join(out_root, windows[0]['label'])}")
+        print(f"  Example folder: {os.path.join(out_root, windows[0]['label'])}")
     else:
-        print("  BŁĄD: Nie wygenerowano żadnych okien!")
+        print("  ERROR: no windows generated!")
 
 
 if __name__ == "__main__":
@@ -427,7 +411,7 @@ if __name__ == "__main__":
     parser.add_argument("--out_dir",    default="data/stockformer/processed")
     parser.add_argument("--config_dir", default="models/stockformer/config")
     parser.add_argument("--smoke_test", action="store_true",
-                        help="10 spółek, 1 subdataset - szybki test")
+                        help="10 stocks, 1 subdataset - quick test")
     args = parser.parse_args()
 
     if args.dataset == "smoke_test":

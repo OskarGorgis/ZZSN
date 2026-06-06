@@ -45,11 +45,13 @@ DS_COLORS = {
     "nasdaq100":          "#1565C0",
     "wig60":              "#BF360C",
     "nasdaq100_extended": "#1B5E20",
+    "csi300":             "#E65100",
 }
 DS_SHORT = {
     "nasdaq100":          "NASDAQ100",
     "wig60":              "WIG60",
     "nasdaq100_extended": "NASDAQ100+",
+    "csi300":             "CSI300", 
 }
 METRIC_INFO = {
     "cls_acc":  ("Classification Accuracy", "higher = better"),

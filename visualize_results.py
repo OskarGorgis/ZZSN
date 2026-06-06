@@ -20,7 +20,7 @@ from src import plots
 
 ROOT         = Path(__file__).parent
 RESULTS_ROOT = ROOT / "data" / "results2"
-DATASETS     = ["nasdaq100", "wig60", "nasdaq100_extended"]
+DATASETS     = ["nasdaq100", "wig60", "nasdaq100_extended", "csi300"]
 
 
 def _print_summary(all_logs: dict) -> None:

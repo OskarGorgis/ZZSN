@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
-DATA_ROOT = ROOT / "data" / "processed"
+DATA_ROOT = ROOT / "data" / "stockformer" / "processed"
 
 _AVG_PAT = re.compile(
     r"average, acc: ([^\s,]+), mae: ([^\s,]+), rmse: ([^\s,]+)"

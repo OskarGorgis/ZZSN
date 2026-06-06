@@ -8,7 +8,7 @@ import numpy as np
 from scipy.stats import spearmanr
 
 ROOT = Path(__file__).parent.parent
-DATA_ROOT = ROOT / "data" / "processed"
+DATA_ROOT = ROOT / "data" / "stockformer" / "processed"
 
 _CLS_PAIR = re.compile(r"\[\s*([-+\d.eE]+)\s+([-+\d.eE]+)\s*\]")
 
