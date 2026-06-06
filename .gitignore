@@ -4,6 +4,10 @@ data/processed/*
 data/raw/*
 .venv/
 
+models/FinRL/results-save
+models/FinRL/results
+data/results2
+
 *.pyc
 *.zip
 __pycache__/

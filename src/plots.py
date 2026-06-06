@@ -172,15 +172,15 @@ def plot_temporal_progression(all_logs: dict, out_dir: Path) -> None:
                     linewidth=2.0, marker="o", markersize=5,
                     label=DS_SHORT.get(ds, ds), zorder=3)
 
-        ax.set_xticks(range(len(windows)))
-        ax.set_xticklabels(x_labels, rotation=45, ha="right", fontsize=7.5)
+        # ax.set_xticks(range(len(windows)))
+        # ax.set_xticklabels(x_labels, rotation=45, ha="right", fontsize=7.5)
 
         if key == "cls_acc":
             ax.axhline(0.5, color="gray", linestyle=":", linewidth=1.0,
                        alpha=0.7, zorder=2)
 
         _ax_style(ax, f"{label} over time\n({note})", label,
-                  xlabel="Window start")
+                  xlabel="Window index")
         ax.legend(fontsize=8.5)
 
     fig.tight_layout()
@@ -317,10 +317,10 @@ def _test_dates_from_window(window_label: str, test_days: int = 40) -> pd.Dateti
 def plot_portfolio_wealth(all_portfolio: dict, out_dir: Path,
                           test_days: int = 40) -> None:
     """
-    Equity-curve charts: portfolio WEALTH over calendar time.
+    Equity-curve charts: continuous cumulative portfolio WEALTH over calendar time.
 
-    Each window's test period is placed on real calendar dates using the
-    window end date. Lines go from earliest (purple) to latest (yellow).
+    Merges the daily returns from all rolling windows sequentially, dropping 
+    overlapping duplicate dates to plot one single continuous portfolio growth line.
     Generates two separate files per dataset:
       portfolio_wealth_regression.png
       portfolio_wealth_classification.png
@@ -345,67 +345,74 @@ def plot_portfolio_wealth(all_portfolio: dict, out_dir: Path,
         if n == 0:
             continue
 
-        cmap   = plt.cm.plasma
-        colors = cmap(np.linspace(0.1, 0.9, n))
-
         for port_key, subtitle, fname in PORT_PANELS:
-            valid = [
-                (w, colors[i])
-                for i, w in enumerate(windows)
-                if port_by_window[w].get(port_key) is not None
-            ]
-            if not valid:
-                continue
+            # 1. Gather all daily returns paired with their actual calendar dates
+            all_dates = []
+            all_returns = []
 
-            fig, ax = plt.subplots(figsize=(13, 6))
-
-            final_wealths = []
-            for window, color in valid:
+            for window in windows:
+                if port_by_window[window].get(port_key) is None:
+                    continue
+                
                 port    = port_by_window[window][port_key]
                 daily_r = port["daily_returns"]
                 n_days  = len(daily_r)
                 dates   = _test_dates_from_window(window, test_days=n_days)
+                
+                all_dates.extend(dates)
+                all_returns.extend(daily_r)
+            
+            if not all_dates:
+                continue
 
-                wealth = np.concatenate([[1.0], np.cumprod(1 + daily_r)])
-                dates_plot = pd.DatetimeIndex(
-                    [dates[0] - pd.offsets.BDay(1)] + list(dates)
-                )
+            # 2. Build a continuous DataFrame and handle overlapping window duplicates smoothly
+            df_returns = pd.DataFrame({"date": all_dates, "return": all_returns})
+            df_returns["date"] = pd.to_datetime(df_returns["date"])
+            
+            # If windows overlap, keep the first prediction or mean return for that calendar day
+            df_returns = df_returns.groupby("date")["return"].mean().reset_index()
+            df_returns = df_returns.sort_values("date").reset_index(drop=True)
 
-                ax.plot(dates_plot, wealth,
-                        color=color, alpha=0.75, linewidth=1.6, zorder=2)
-                final_wealths.append(wealth[-1])
+            # 3. Calculate true cumulative compounded continuous wealth
+            # Starting point: 1.0 wealth on the day before our first return date
+            initial_date = df_returns["date"].iloc[0] - pd.offsets.BDay(1)
+            
+            dates_plot = [initial_date] + df_returns["date"].tolist()
+            wealth_plot = np.concatenate([[1.0], np.cumprod(1 + df_returns["return"].values)])
 
-            # Break-even line
+            # 4. Generate the Plot
+            fig, ax = plt.subplots(figsize=(13, 6))
+
+            # Since it's a single line, we can draw it as one clean curve.
+            # You can color it using your theme or apply a gradient if desired!
+            ax.plot(dates_plot, wealth_plot,
+                    color="#512DA8", alpha=0.9, linewidth=2.0, zorder=2)
+            
+            # Fill subtle shade under the equity line
+            ax.fill_between(dates_plot, wealth_plot, 1.0, color="#512DA8", alpha=0.08, zorder=1)
+
+            # Break-even baseline
             ax.axhline(1.0, color="black", linewidth=1.0, linestyle="--",
-                       alpha=0.55, zorder=3, label="Break-even (1.0)")
+                       alpha=0.55, zorder=3)
 
-            # Annotation: mean final wealth
-            mean_final = float(np.mean(final_wealths))
-            wins_above = sum(1 for w in final_wealths if w > 1.0)
-            ax.text(0.02, 0.96,
-                    f"Mean final wealth: {mean_final:.4f}\n"
-                    f"Windows ending above 1.0: {wins_above}/{len(final_wealths)}",
-                    transform=ax.transAxes, fontsize=9, va="top",
-                    bbox=dict(boxstyle="round,pad=0.4",
-                              facecolor="white", alpha=0.85, edgecolor="gray"))
+            # Annotation box: final total portfolio wealth achieved at the end of the timeline
+            final_total_wealth = wealth_plot[-1]
+            total_return_pct = (final_total_wealth - 1.0) * 100
+            ax.text(0.02, 0.95,
+                    f"Final Continuous Wealth: {final_total_wealth:.4f}\n"
+                    f"Total Return: {total_return_pct:+.2f}%",
+                    transform=ax.transAxes, fontsize=10, va="top",
+                    bbox=dict(boxstyle="round,pad=0.5",
+                              facecolor="white", alpha=0.9, edgecolor="gray"))
 
-            # Colourbar (outside the axes, right side)
-            sm = plt.cm.ScalarMappable(
-                cmap=cmap, norm=plt.Normalize(vmin=0, vmax=n - 1)
-            )
-            sm.set_array([])
-            cbar = fig.colorbar(sm, ax=ax, pad=0.015, aspect=35, shrink=0.85)
-            cbar.set_label("Time period  (earliest → latest)", fontsize=9)
-            cbar.set_ticks([0, n - 1])
-            cbar.set_ticklabels([windows[0][:7], windows[-1][:7]], fontsize=8)
-
+            # Formatting Dates and Axis Layout
             ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
             ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
             plt.setp(ax.get_xticklabels(), rotation=40, ha="right", fontsize=9)
 
             ax.set_title(
                 f"{ds} — {subtitle}\n"
-                "each curve = one rolling test window placed on its real calendar dates",
+                "Continuous Cumulative Equity Curve (Chained Out-of-Sample Window Returns)",
                 fontsize=11, fontweight="bold", pad=10,
             )
             ax.set_ylabel("Portfolio wealth  (1.0 = initial capital)", fontsize=10)
@@ -416,7 +423,12 @@ def plot_portfolio_wealth(all_portfolio: dict, out_dir: Path,
             ax.spines["right"].set_visible(False)
 
             fig.tight_layout()
-            _save(fig, out_dir / ds / fname)
+            
+            # Create target folder structures dynamically if missing
+            ds_dir = out_dir / ds
+            ds_dir.mkdir(parents=True, exist_ok=True)
+            _save(fig, ds_dir / fname)
+            plt.close(fig)  # Free memory allocation safely
 
 
 def plot_cross_eval_overview(cross_data: dict, indomain: dict,
@@ -624,7 +636,7 @@ def plot_transfer_delta(cross_data: dict, indomain: dict,
 
 
 def plot_heatmaps(all_rows: list, datasets: list, out_dir: Path) -> None:
-    """Heatmap matrix (source × target) for each metric."""
+    """Heatmap matrix (source x target) for each metric."""
     n      = len(datasets)
     ds_idx = {ds: i for i, ds in enumerate(datasets)}
     ticks  = [DS_SHORT.get(d, d) for d in datasets]

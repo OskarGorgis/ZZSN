@@ -169,7 +169,7 @@ def execute_pipeline(train_file, trade_file, agent_model, plot_name):
     MVO_result = backtest_mvo(train_data, trade_data)
     dji = backtest_dji()
     
-    # 4. Consolidate Metrics
+
     result = pd.DataFrame(
         {
             "sac": df_result_sac["account_value"],

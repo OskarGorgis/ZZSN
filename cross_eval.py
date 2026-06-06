@@ -28,9 +28,9 @@ import torch
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT / "stockformer"))
 
-from lib.Multitask_Stockformer_utils import metric, StockDataset
-from lib.graph_utils import loadGraph
-from Stockformermodel.Multitask_Stockformer_models import Stockformer
+from models.stockformer.lib.Multitask_Stockformer_utils import metric, StockDataset
+from models.stockformer.lib.graph_utils import loadGraph
+from models.stockformer.Stockformermodel.Multitask_Stockformer_models import Stockformer
 
 from src.log_parser import load_dataset as load_logs
 

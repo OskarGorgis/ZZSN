@@ -165,7 +165,7 @@ def load_window_outputs(dataset: str, window: str):
         Tc = min(T, p_cls.shape[0])
         Nc = min(N, p_cls.shape[1])
         p_cls = p_cls[:Tc, :Nc, :]
-
+    
     return p_ret, a_ret, p_cls
 
 

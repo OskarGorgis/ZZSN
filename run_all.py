@@ -26,6 +26,9 @@ DATASETS = {
     "csi300":             {"start": "2021-01-01", "end": "2026-01-31"},
 }
 
+START_DATE = "2023-01-01"
+END_DATE = "2025-12-31"
+
 
 def run(cmd, desc):
     print(f"\n{'='*60}")
@@ -42,8 +45,9 @@ def download_stockformer(dataset, dates):
     run(
         [STOCKFORMER_PYTHON_PATH, "data/stockformer/download_data.py",
          "--dataset", dataset,
-         "--start",   dates["start"],
-         "--end",     dates["end"]],
+         "--start",   START_DATE, #dates["start"],
+         "--end",     END_DATE, #dates["end"]
+         ],
         f"Generating data: {dataset} ({dates['start']} → {dates['end']})",
     )
 

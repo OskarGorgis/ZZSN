@@ -21,10 +21,10 @@ def parse_log(log_path: Path) -> dict:
     dict with keys:
         epochs        : list[int]
         train_loss    : list[float]
-        val_cls_acc   : list[float]  – classification accuracy per epoch (val set)
-        val_reg_mae   : list[float]  – regression MAE per epoch (val set)
+        val_cls_acc   : list[float]  - classification accuracy per epoch (val set)
+        val_reg_mae   : list[float]  - regression MAE per epoch (val set)
         val_reg_rmse  : list[float]
-        test          : dict | None  – {cls_acc, reg_mae, reg_rmse} from test phase
+        test          : dict | None  - {cls_acc, reg_mae, reg_rmse} from test phase
     """
     epochs, train_loss = [], []
     val_cls_acc, val_reg_mae, val_reg_rmse = [], [], []

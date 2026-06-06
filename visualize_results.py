@@ -55,7 +55,8 @@ def main() -> None:
     for ds, logs in all_logs.items():
         n = sum(1 for d in logs.values() if d.get("test"))
         print(f"  {ds}: {len(logs)} windows, {n} with test results")
-
+    # print(list(all_logs.items())[0])
+    # return
     _print_summary(all_logs)
 
     # ── Main: dataset-level comparison ───────────────────────────────────────
@@ -69,6 +70,8 @@ def main() -> None:
     all_portfolio = {}
     for ds, logs in all_logs.items():
         windows   = sorted(logs.keys())
+        # print(ds)
+        # print(windows)
         port_data = compute_all_portfolios(ds, windows)
         if port_data:
             print(f"  {ds}: {len(port_data)} windows with prediction CSVs")

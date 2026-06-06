@@ -42,7 +42,7 @@ def main(args):
 
     if args.window is not None:
         if args.window >= len(configs):
-            print(f"Window index {args.window} out of range (0–{len(configs)-1})")
+            print(f"Window index {args.window} out of range (0-{len(configs)-1})")
             sys.exit(1)
         configs = [configs[args.window]]
 
